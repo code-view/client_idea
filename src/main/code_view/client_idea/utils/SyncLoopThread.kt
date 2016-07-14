@@ -3,7 +3,7 @@ package code_view.client_idea.utils
 import com.intellij.openapi.application.ApplicationManager
 
 class SyncLoopThread(run: SyncLoopThread.() -> Unit) {
-    val delay = 100L
+    val delay = 20L
     var shouldStop = false
 
 
