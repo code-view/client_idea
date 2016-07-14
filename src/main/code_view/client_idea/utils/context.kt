@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 class Context(val project: Project) {
     val sync by lazy { SyncService.getInstance(project) }
     val settings by lazy { PropertiesComponent.getInstance(project)!! }
+    val listener by lazy { EditorListener(this) }
 }
 
 fun <T> context(project: Project, run: (context: Context) -> T) =

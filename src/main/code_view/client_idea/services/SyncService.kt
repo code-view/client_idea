@@ -2,9 +2,9 @@ package code_view.client_idea.services
 
 import code_view.client_idea.Client
 import code_view.client_idea.Session
-import code_view.client_idea.utils.SyncLoopThread
 import code_view.client_idea.settings.url
 import code_view.client_idea.utils.context
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
@@ -12,22 +12,21 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiUtilBase
+import java.util.concurrent.LinkedBlockingQueue
 
 
 class SyncService {
     lateinit var project: Project
     lateinit var client: Client
     lateinit var session: Session
-    var previousSession: Session? = null
+    val queue = LinkedBlockingQueue<Session>()
     var syncing = false
 
     init {
-        SyncLoopThread {
-            if (syncing && project is Project) {
-                onDispatchThread {
-                    session = updateSession(session)
-                }
-
+        ApplicationManager.getApplication().executeOnPooledThread {
+            var previousSession: Session? = null
+            while (true) {
+                val session = queue.take()
                 if (session != previousSession && session.fileName != null) {
                     client.updateSession(session)
                     previousSession = session
@@ -72,6 +71,15 @@ class SyncService {
             client = Client(it.settings.url)
         }
         return this
+    }
+
+    fun sync() {
+        session = updateSession(session)
+        if (!queue.isEmpty()) {
+            queue.clear()
+        }
+
+        queue.offer(session)
     }
 
     companion object {

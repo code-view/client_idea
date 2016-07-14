@@ -67,9 +67,11 @@ class ToggleShowingCodeAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         context(e) {
             if (it.sync.syncing) {
+                it.listener.stop()
                 it.sync.stop()
             } else {
                 if (it.sync.start()) {
+                    it.listener.listen()
                     showSyncingNotification(it.sync.project, it.sync.session)
                 } else {
                     showErrorNotification(it.sync.project)
