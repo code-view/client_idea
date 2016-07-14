@@ -5,28 +5,19 @@ import com.github.salomonbrys.kotson.*
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.intellij.openapi.editor.Caret
-import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.psi.PsiFile
 
 data class Session(val id: String, val fileName: String?, val text: String?,
                    val selectionStartLine: Int?, val selectionStartColumn: Int?,
                    val selectionEndLine: Int?, val selectionEndColumn: Int?) {
-    fun update(file: PsiFile, caret: Caret)
-            = Session(
-            id, file.name, file.text,
-            translateLine(caret.selectionStartPosition.line, caret.logicalPosition),
-            translateColumn(caret.selectionStartPosition.column, caret.logicalPosition),
-            translateLine(caret.selectionEndPosition.line, caret.logicalPosition),
-            translateColumn(caret.selectionEndPosition.column, caret.logicalPosition))
-
-    fun translateLine(line: Int, logicalPosition: LogicalPosition) =
-            line - logicalPosition.softWrapLinesBeforeCurrentLogicalLine -
-                    logicalPosition.softWrapLinesOnCurrentLogicalLine +
-                    logicalPosition.foldedLines
-
-    fun translateColumn(column: Int, logicalPosition: LogicalPosition) =
-            column - logicalPosition.softWrapColumnDiff -
-                    logicalPosition.foldingColumnDiff
+    fun update(file: PsiFile, caret: Caret): Session {
+        val start = caret.editor.visualToLogicalPosition(caret.selectionStartPosition)
+        val end = caret.editor.visualToLogicalPosition(caret.selectionEndPosition)
+        return Session(
+                id, file.name, file.text,
+                start.line, start.column,
+                end.line, end.column)
+    }
 
     val json: String get() = gson.toJson(this)
 
