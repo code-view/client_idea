@@ -4,16 +4,29 @@ import com.github.kittinunf.fuel.core.ResponseDeserializable
 import com.github.salomonbrys.kotson.*
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import com.intellij.openapi.editor.Caret
+import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.psi.PsiFile
 
 data class Session(val id: String, val fileName: String?, val text: String?,
                    val selectionStartLine: Int?, val selectionStartColumn: Int?,
                    val selectionEndLine: Int?, val selectionEndColumn: Int?) {
-    fun update(fileName: String, text: String,
-               selectionStartLine: Int, selectionStartColumn: Int,
-               selectionEndLine: Int?, selectionEndColumn: Int?)
+    fun update(file: PsiFile, caret: Caret)
             = Session(
-            id, fileName, text, selectionStartLine, selectionStartColumn,
-            selectionEndLine, selectionEndColumn)
+            id, file.name, file.text,
+            translateLine(caret.selectionStartPosition.line, caret.logicalPosition),
+            translateColumn(caret.selectionStartPosition.column, caret.logicalPosition),
+            translateLine(caret.selectionEndPosition.line, caret.logicalPosition),
+            translateColumn(caret.selectionEndPosition.column, caret.logicalPosition))
+
+    fun translateLine(line: Int, logicalPosition: LogicalPosition) =
+            line - logicalPosition.softWrapLinesBeforeCurrentLogicalLine -
+                    logicalPosition.softWrapLinesOnCurrentLogicalLine +
+                    logicalPosition.foldedLines
+
+    fun translateColumn(column: Int, logicalPosition: LogicalPosition) =
+            column - logicalPosition.softWrapColumnDiff -
+                    logicalPosition.foldingColumnDiff
 
     val json: String get() = gson.toJson(this)
 

@@ -42,13 +42,7 @@ class SyncService {
         if (editor is Editor && caret is Caret) {
             val file = PsiUtilBase.getPsiFileInEditor(editor, project)
             if (file is PsiFile) {
-                return session.update(
-                        file.name,
-                        file.text,
-                        caret.selectionStartPosition.line,
-                        caret.selectionStartPosition.column,
-                        caret.selectionEndPosition.line,
-                        caret.selectionEndPosition.column)
+                return session.update(file, caret)
             }
         }
 
